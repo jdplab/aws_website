@@ -23,7 +23,7 @@ provider "aws" {
     region = var.region
 }
 
-resource "aws_s3_bucket" "website" {
+resource "aws_s3_bucket" "website-dev" {
     bucket = "jpolanskywebsite-dev"
     
     tags = {
