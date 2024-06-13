@@ -73,7 +73,7 @@ resource "aws_s3_bucket_website_configuration" "website-config" {
 }
 
 resource "aws_s3_object" "html" {
-    foreach = fileset("web/", "*.html")
+    for_each = fileset("web/", "*.html")
     bucket = aws_s3_bucket.website-dev.id
     key = each.value
     source = "web/${each.value}"
@@ -83,7 +83,7 @@ resource "aws_s3_object" "html" {
 }
 
 resource "aws_s3_object" "css" {
-    foreach = fileset("web/", "*.css")
+    for_each = fileset("web/", "*.css")
     bucket = aws_s3_bucket.website-dev.id
     key = each.value
     source = "web/${each.value}"
