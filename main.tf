@@ -31,13 +31,6 @@ resource "aws_s3_bucket" "website-dev" {
     }
 }
 
-resource "aws_s3_bucket_ownership_controls" "s3_bucket_acl_ownership" {
-    bucket = aws_s3_bucket.website-dev.id
-    rule {
-        object_ownership = "BucketOwnerPreferred"
-    }
-}
-
 resource "aws_s3_bucket_acl" "bucket-acl" {
     bucket = aws_s3_bucket.website-dev.id
     acl = "public-read"
