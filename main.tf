@@ -80,8 +80,8 @@ resource "aws_acm_certificate_validation" "cert-validation" {
 
 resource "cloudflare_record" "cert-validation" {
     zone_id = var.CLOUDFLARE_ZONE_ID
-    name = aws_acm_certificate.cert.domain_validation_options[0].resource_record_name
-    value = aws_acm_certificate.cert.domain_validation_options[0].resource_record_value
+    name = tolist(aws_acm_certificate.cert.domain_validation_options)[0].resource_record_name
+    value = tolist(aws_acm_certificate.cert.domain_validation_options)[0].resource_record_value
     type = "TXT"
     proxied = false
 }
