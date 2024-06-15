@@ -103,10 +103,10 @@ resource "aws_cloudfront_distribution" "website" {
     origin {
         domain_name = aws_s3_bucket.website-dev.bucket_regional_domain_name
         origin_id = aws_s3_bucket.website-dev.bucket_regional_domain_name
-    }
 
-    s3_origin_config {
-        origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+        s3_origin_config {
+            origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+        }
     }
     
     default_cache_behavior {
