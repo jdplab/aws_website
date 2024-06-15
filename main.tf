@@ -111,7 +111,7 @@ resource "acme_certificate" "cert" {
 
 resource "aws_acm_certificate" "cert" {
     private_key = acme_certificate.cert.private_key_pem
-    certificate_body = acme_certificate.cert.certificate
+    certificate_body = acme_certificate.cert.certificate_pem
 }
 
 resource "aws_cloudfront_distribution" "website" {
