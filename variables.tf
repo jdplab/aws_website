@@ -16,10 +16,6 @@ variable "AWS_SECRET_ACCESS_KEY" {
     type = string
 }
 
-variable "AWS_SESSION_TOKEN" {
-    type = string
-}
-
 variable "CLOUDFLARE_API_TOKEN" {
     type = string
 }
