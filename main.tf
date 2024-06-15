@@ -18,6 +18,11 @@ terraform {
             source = "cloudflare/cloudflare"
             version = "4.25.0"
         }
+
+        acme = {
+            source = "vancluever/acme"
+            version = "2.21.0"
+        }
     }
 }
 
@@ -28,7 +33,11 @@ provider "aws" {
 }
 
 provider "cloudflare" {
-  api_token = var.CLOUDFLARE_API_TOKEN
+    api_token = var.CLOUDFLARE_API_TOKEN
+}
+
+provider "acme" {
+    server_url = "https://acme-v02.api.letsencrypt.org/directory"
 }
 
 resource "aws_s3_bucket" "website-dev" {
