@@ -308,10 +308,6 @@ resource "aws_api_gateway_integration_response" "visitorcount_integration_respon
   resource_id = aws_api_gateway_resource.visitorcount_resource.id
   http_method = aws_api_gateway_method.visitorcount_method.http_method
   status_code = aws_api_gateway_method_response.visitorcount_method_response.status_code
-  
-  response_templates = {
-    "application/json" = ""
-  }
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
