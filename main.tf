@@ -196,32 +196,32 @@ resource "aws_s3_object" "js" {
 }
 
 resource "aws_dynamodb_table" "visitor_count_db" {
-  name = "VisitorCount"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key = "id"
+    name = "VisitorCount"
+    billing_mode = "PAY_PER_REQUEST"
+    hash_key = "id"
 
-  attribute {
-    name = "id"
-    type = "S"
+    attribute {
+        name = "id"
+        type = "S"
   }
 }
 
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "lambda_execution_role"
+    name = "lambda_execution_role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-        Effect = "Allow"
-        Sid = ""
-      },
-    ]
-  })
+    assume_role_policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Action = "sts:AssumeRole"
+                Principal = {
+                    Service = "lambda.amazonaws.com"
+                }
+                Effect = "Allow"
+                Sid = ""
+            },
+        ]
+    })
 }
 
 resource "aws_iam_policy" "lambda_dynamodb_access" {
@@ -268,109 +268,73 @@ resource "aws_api_gateway_rest_api" "visitorcount_api" {
   description = "visitorcount_api"
 }
 
-resource "aws_lambda_permission" "api_gateway" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.visitor_counter.arn
-  principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_api_gateway_rest_api.visitorcount_api.execution_arn}/*/*/*"
-}
-
-resource "aws_api_gateway_resource" "visitorcount_apigateway" {
+resource "aws_api_gateway_resource" "visitorcount_resource" {
   rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
   parent_id   = aws_api_gateway_rest_api.visitorcount_api.root_resource_id
-  path_part   = "mydemoresource"
+  path_part   = "visitorcount"
 }
 
-resource "aws_api_gateway_method" "visitorcount_apigatewaymethod" {
-  rest_api_id   = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id   = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method   = "GET"
+resource "aws_api_gateway_method" "visitorcount_method" {
+  rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
+  resource_id = aws_api_gateway_resource.visitorcount_resource.id
+  http_method = "POST"
   authorization = "NONE"
 }
 
-resource "aws_api_gateway_integration" "LambdaIntegration" {
+resource "aws_api_gateway_integration" "visitorcount_integration" {
   rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method = aws_api_gateway_method.visitorcount_apigatewaymethod.http_method
-
+  resource_id = aws_api_gateway_resource.visitorcount_resource.id
+  http_method = aws_api_gateway_method.visitorcount_method.http_method
   integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.visitor_counter.invoke_arn
+  type = "AWS_PROXY"
+  uri = aws_lambda_function.visitor_counter.invoke_arn
 }
 
-resource "aws_api_gateway_method_response" "MyDemoMethodResponse200" {
+resource "aws_api_gateway_method_response" "visitorcount_method_response" {
   rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method = aws_api_gateway_method.visitorcount_apigatewaymethod.http_method
+  resource_id = aws_api_gateway_resource.visitorcount_resource.id
+  http_method = aws_api_gateway_method.visitorcount_method.http_method
   status_code = "200"
-}
-
-resource "aws_api_gateway_integration_response" "MyDemoIntegrationResponse" {
-  rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method = aws_api_gateway_integration.LambdaIntegration.http_method
-  status_code = aws_api_gateway_method_response.MyDemoMethodResponse200.status_code
-}
-
-resource "aws_api_gateway_deployment" "MyDemoDeployment" {
-  depends_on = [
-    aws_api_gateway_integration.LambdaIntegration,
-    aws_api_gateway_method_response.MyDemoMethodResponse200,
-    aws_api_gateway_integration_response.MyDemoIntegrationResponse
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  stage_name  = "prod"
-}
-
-resource "aws_api_gateway_method_response" "CORSOptions" {
-  rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method = "OPTIONS"
-  status_code = "200"
-
-  response_models = {
-    "application/json" = "Empty"
-  }
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = true,
     "method.response.header.Access-Control-Allow-Methods" = true,
-    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Origin" = true
   }
 }
 
-resource "aws_api_gateway_integration_response" "CORSOptionsIntegration" {
-  depends_on = [aws_api_gateway_method_response.CORSOptions]
-
+resource "aws_api_gateway_integration_response" "visitorcount_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method = "OPTIONS"
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'aws.jon-polansky.com'"
-  }
-
+  resource_id = aws_api_gateway_resource.visitorcount_resource.id
+  http_method = aws_api_gateway_method.visitorcount_method.http_method
+  status_code = aws_api_gateway_method_response.visitorcount_method_response.status_code
+  
   response_templates = {
     "application/json" = ""
   }
-}
 
-resource "aws_api_gateway_integration" "CORSOptionsIntegration" {
-  rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
-  resource_id = aws_api_gateway_resource.visitorcount_apigateway.id
-  http_method = "OPTIONS"
-
-  type                    = "MOCK"
-  request_templates       = {
-    "application/json" = "{\"statusCode\": 200}"
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" =  "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin" = "'aws.jon-polansky.com'"
   }
 }
 
-output "api_gateway_invoke_url" {
-  value = "${aws_api_gateway_deployment.MyDemoDeployment.invoke_url}prod/visitorcount"
+
+resource "aws_api_gateway_deployment" "visitorcount_deployment" {
+  depends_on = [aws_api_gateway_integration.visitorcount_integration]
+  rest_api_id = aws_api_gateway_rest_api.visitorcount_api.id
+  stage_name = "prod"
+}
+
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id = "AllowExecutionFromAPIGateway"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.visitor_counter.function_name
+  principal = "apigateway.amazonaws.com"
+  source_arn = "${aws_api_gateway_rest_api.visitorcount_api.execution_arn}/*/*"
+}
+
+output "aws_api_gateway_invoke_url" {
+  value = aws_api_gateway_deployment.visitorcount_deployment.invoke_url
 }
