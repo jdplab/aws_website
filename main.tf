@@ -185,3 +185,70 @@ resource "aws_s3_object" "css" {
     acl = "public-read"
 }
 
+resource "aws_dynamodb_table" "visitor_count_db" {
+  name = "VisitorCount"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
+
+resource "aws_iam_role" "lambda_execution_role" {
+  name = "lambda_execution_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Effect = "Allow"
+        Sid  = ""
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "lambda_dynamodb_access" {
+  name = "lambda_dynamodb_access"
+  description = "IAM policy for accessing DynamoDB from Lambda"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "dynamodb:UpdateItem",
+          "dynamodb:GetItem",
+        ]
+        Resource = aws_dynamodb_table.visitor_count_db.arn
+        Effect = "Allow"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_dynamodb_access_attachment" {
+  role = aws_iam_role.lambda_execution_role.name
+  policy_arn = aws_iam_policy.lambda_dynamodb_access.arn
+}
+
+data "archive_file" "lambda_zip" {
+  type        = "zip"
+  source_dir  = "function/visitorcount.py"
+  output_path = "zip/visitorcount.zip"
+}
+
+resource "aws_lambda_function" "visitor_counter" {
+  function_name    = "visitorCounter"
+  handler          = "index.lambda_handler"
+  role             = aws_iam_role.lambda_execution_role.arn
+  runtime          = "python3.8"
+  filename         = data.archive_file.lambda_zip.output_path
+  source_code_hash = filebase64sha256(data.archive_file.lambda_zip.output_path)
+}
