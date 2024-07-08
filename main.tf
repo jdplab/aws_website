@@ -274,41 +274,62 @@ resource "aws_api_gateway_resource" "VisitorCounterResource" {
   path_part = "visitorcount"
 }
 
-resource "aws_api_gateway_method" "visitor_counter_get" {
+resource "aws_api_gateway_method" "cors_options" {
   rest_api_id   = aws_api_gateway_rest_api.visitor_count_api.id
   resource_id   = aws_api_gateway_resource.VisitorCounterResource.id
-  http_method   = "GET"
+  http_method   = "OPTIONS"
   authorization = "NONE"
-}
 
-resource "aws_api_gateway_method_response" "get_method_response_200" {
-  rest_api_id = aws_api_gateway_rest_api.visitor_count_api.id
-  resource_id = aws_api_gateway_resource.VisitorCounterResource.id
-  http_method = "GET"
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+  request_parameters = {
+    "method.request.header.Access-Control-Request-Headers" = false
+    "method.request.header.Access-Control-Request-Method" = false
+    "method.request.header.Origin" = false
   }
 }
 
-resource "aws_api_gateway_integration" "get_integration" {
+resource "aws_api_gateway_method_response" "cors_options_response_200" {
   rest_api_id = aws_api_gateway_rest_api.visitor_count_api.id
   resource_id = aws_api_gateway_resource.VisitorCounterResource.id
-  http_method = "GET"
-  integration_http_method = "POST"
-  type        = "AWS_PROXY"
-  uri         = aws_lambda_function.visitor_counter.invoke_arn
-}
-
-resource "aws_api_gateway_integration_response" "get_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.visitor_count_api.id
-  resource_id = aws_api_gateway_resource.VisitorCounterResource.id
-  http_method = "GET"
+  http_method = aws_api_gateway_method.cors_options.http_method
   status_code = "200"
 
+  response_models = {
+    "application/json" = "Empty"
+  }
+
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'https://aws.jon-polansky.com'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'aws.jon-polansky.com'"
+  }
+}
+
+resource "aws_api_gateway_integration" "cors_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.visitor_count_api.id
+  resource_id = aws_api_gateway_resource.VisitorCounterResource.id
+  http_method = aws_api_gateway_method.cors_options.http_method
+
+  type                    = "MOCK"
+  passthrough_behavior    = "WHEN_NO_MATCH"
+  request_templates       = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "cors_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.visitor_count_api.id
+  resource_id = aws_api_gateway_resource.VisitorCounterResource.id
+  http_method = aws_api_gateway_method.cors_options.http_method
+  status_code = "200"
+
+  response_templates = {
+    "application/json" = ""
+  }
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
 
