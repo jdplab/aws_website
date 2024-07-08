@@ -240,7 +240,7 @@ resource "aws_iam_role_policy_attachment" "lambda_dynamodb_access_attachment" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_dir  = "function/visitorcount.py"
+  source_dir  = "function"
   output_path = "zip/visitorcount.zip"
 }
 
