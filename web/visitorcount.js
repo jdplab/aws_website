@@ -1,5 +1,5 @@
 async function fetchVisitorCount() {
-    const apiUrl = 'YOUR_API_GATEWAY_ENDPOINT_URL';
+    const apiUrl = 'https://x0h9cpxeti.execute-api.us-east-1.amazonaws.com/prodvisitorcount';
     try {
         const response = await fetch(apiUrl);
         const data = await response.json();
